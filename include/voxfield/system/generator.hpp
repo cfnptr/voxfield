@@ -36,7 +36,8 @@ class GeneratorSystem final : public System
 	ThreadSystem* threadSystem = nullptr;
 	void** noiseGens = nullptr;
 	vector<Chunk*> chunks;
-	mutex chunkLocker;
+	mutex chunkMutex;
+	uint32 noiseCount = 0;
 
 	void initialize() final;
 	void terminate() final;
@@ -46,8 +47,7 @@ class GeneratorSystem final : public System
 	
 	friend class ecsm::Manager;
 public:
-	void generateChunk(const int3& position,
-		uint32 structureID, GenType genType);
+	void generateChunk(const int3& position, uint32 structureID, GenType genType);
 	void flush(std::function<void(const Chunk*)> onChunk);
 };
 

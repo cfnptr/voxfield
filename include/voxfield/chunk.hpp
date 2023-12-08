@@ -17,14 +17,18 @@
 //----------------------------------------------------------------------------------------
 
 #pragma once
+#include "voxfield/voxel.hpp"
+#include "garden/defines.hpp"
 #include "voxy/chunk.hpp"
 #include "math/vector.hpp"
+#include "ecsm.hpp"
 
 namespace voxfield
 {
 
-using namespace math;
 using namespace voxy;
+using namespace math;
+using namespace ecsm;
 
 // Optimal for performance
 #define CHUNK_LENGTH 32
@@ -32,9 +36,6 @@ using namespace voxy;
 #define CHUNK_SIZE 32768
 // CHUNK_LENGTH / 2
 #define CHUNK_HALF_LENGTH 16
-
-// More than enough ID count (65536)
-typedef uint16 Voxel;
 
 static int3 worldToChunkPos(const float3& position) noexcept
 {
@@ -47,26 +48,34 @@ static float3 chunkToWorldPos(const int3& position) noexcept
 
 enum class ChunkState : uint8
 {
-	Allocated, Generated, Meshed, Count
+	Allocated, Generating, Generated, Meshing, Meshed, Count
 };
 
-
-class Chunk final : public Chunk3<CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH, Voxel>
+//----------------------------------------------------------------------------------------
+struct Chunk : public Chunk3<CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH, Voxel>
 {
-private:
+protected:
 	int3 position = int3(0);
 	uint32 structureID = 0;
-	uint16 _alignment0 = 0;
-	uint8 _alignment1 = 0;
+	ID<Entity> entity = {};
 public:
 	ChunkState state = ChunkState::Allocated;
+	bool isEmpty = false;
 	
 	Chunk() = default;
 	Chunk(Voxel voxel, const int3& position,
-		uint32 structureID) : Chunk3(voxel) { }
+		uint32 structureID, ID<Entity> entity) : Chunk3(voxel)
+	{
+		this->position = position;
+		this->structureID = structureID;
+		this->entity = entity;
+	}
 	
 	const int3& getPosition() const noexcept{ return position; }
 	uint32 getStructureID() const noexcept { return structureID; }
+	ID<Entity> getEntity() const noexcept { return entity; }
+private:
+	uint16 _alignment = 0;
 };
 
 } // namespace voxfield

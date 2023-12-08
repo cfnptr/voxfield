@@ -16,8 +16,30 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //--------------------------------------------------------------------------------------------------
 
-//--------------------------------------------------------------------------------------------------
-int main(int argc, char *argv[])
+#include "common/gbuffer.gsl"
+
+pipelineState
 {
-	return 0;
+	depthTesting = on;
+	depthWriting = on;
+}
+
+in float2 fs.texCoords;
+in float3 fs.normal;
+
+out float4 fb.gBuffer0;
+out float4 fb.gBuffer1;
+out float4 fb.gBuffer2;
+
+void main()
+{
+	float3 color = float3(1.0f);
+	float metallic = 0.0f;
+	float roughness = 1.0f;
+	float reflectance = 0.5f;
+	float3 emissive = float3(0.0f);
+
+	fb.gBuffer0 = encodeGBuffer0(color, metallic); 
+	fb.gBuffer1 = encodeGBuffer1(fs.normal, reflectance);
+	fb.gBuffer2 = encodeGBuffer2(emissive, roughness);
 }

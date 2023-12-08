@@ -16,8 +16,29 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //--------------------------------------------------------------------------------------------------
 
-//--------------------------------------------------------------------------------------------------
-int main(int argc, char *argv[])
+#include "common/chunk.gsl"
+
+in uint2 vs.data : u32;
+
+out float2 fs.texCoords;
+out float3 fs.normal;
+
+uniform pushConstants
 {
-	return 0;
+	uint32 instanceIndex;
+} pc;
+
+buffer readonly Instance
+{
+	InstanceData data[];
+} instance;
+
+void main()
+{
+	float4 position = float4(decodeChunkPosition(vs.data), 1.0f);
+	gl.position = instance.data[pc.instanceIndex].mvp * position;
+	fs.texCoords = decodeChunkTexCoords(vs.data);
+	fs.normal = decodeChunkNormal(vs.data);
 }
+
+// TODO: create separate shader with normals update for mooving objects.

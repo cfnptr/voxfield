@@ -17,37 +17,11 @@
 //----------------------------------------------------------------------------------------
 
 #pragma once
-#include "voxfield/registry.hpp"
-#include "voxfield/structure.hpp"
-#include "voxfield/system/generator.hpp"
-#include "voxfield/client/system/mesher.hpp"
 
-namespace voxfield::client
+namespace voxfield
 {
 
-#define WORLD_STRUCTURE_ID 0
+#define BASE_TEXTURE_SIZE 32
+#define MAX_TEXTURE_SIZE 256
 
-class WorldSystem final : public System
-{
-	GraphicsSystem* graphicsSystem = nullptr;
-	GeneratorSystem* generatorSystem = nullptr;
-	MesherSystem* mesherSystem = nullptr;
-	Registry registry = {};
-	Structure structure = {};
-	stack<Chunk*> freeChunks;
-
-	void initialize() final;
-	void update() final;
-
-	friend class ecsm::Manager;
-public:
-	int32 minBorder = STRUCTURE_POS_MIN;
-	int32 maxBorder = STRUCTURE_POS_MAX;
-	uint8 chunkViewRadius = 8;
-
-	const Registry& getRegistry() const noexcept { return registry; }
-	const Structure& getStructure() const noexcept { return structure; }
-	stack<Chunk*>& getFreeChunks() noexcept { return freeChunks; }
-};
-
-} // namespace voxfield::client
+}; // namespace voxfield

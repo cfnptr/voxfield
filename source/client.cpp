@@ -1,4 +1,4 @@
-//----------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
 // Voxfield - An open source voxel based multiplayer sandbox game.
 // Copyright (C) 2022-2023  Nikita Fediuchin
 //
@@ -14,36 +14,61 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//----------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
 
-#include "ecsm.hpp"
 #include "garden/main.hpp"
-#include "garden/thread.hpp"
 #include "garden/system/fpv.hpp"
-#include "garden/system/graphics.hpp"
+#include "garden/system/settings.hpp"
+#include "garden/system/resource.hpp"
 #include "garden/system/graphics/editor.hpp"
+
 #include "voxfield/client/system/world.hpp"
+
+extern "C"
+{
+#include "mpmt/thread.h"
+}
 
 using namespace ecsm;
 using namespace garden;
 using namespace voxfield;
 using namespace voxfield::client;
 
-//----------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
 GARDEN_MAIN
 {
-	Thread::setForegroundPriority();
+	setThreadForegroundPriority();
 
 	auto manager = new Manager();
+	manager->createSystem<DoNotDestroySystem>();
+	manager->createSystem<BakedTransformSystem>();
+	manager->createSystem<SettingsSystem>();
+	manager->createSystem<LogSystem>();
+	manager->createSystem<ResourceSystem>();
 	manager->createSystem<GeneratorSystem>();
+	manager->createSystem<MesherSystem>();
 	manager->createSystem<WorldSystem>();
 	manager->createSystem<FpvSystem>();
+	manager->createSystem<CameraSystem>();
 	manager->createSystem<TransformSystem>();
 	manager->createSystem<GraphicsSystem>();
+	manager->createSystem<ThreadSystem>();
+
+	// TODO: implement VK_NV_low_latency2 on nvidia GPUs.
+
+	manager->createSubsystem<GraphicsSystem, MeshRenderSystem>(true);
+	manager->createSubsystem<GraphicsSystem, DeferredRenderSystem>(true);
+	manager->createSubsystem<GraphicsSystem, OpaqVoxRenderSystem>();
+
 	#if GARDEN_DEBUG
 	manager->createSubsystem<GraphicsSystem, EditorRenderSystem>();
 	#endif
-	//manager->createSystem<ThreadSystem>();
+
+	manager->registerSubsystem<DeferredRenderSystem>(manager->get<MeshRenderSystem>());
+	// manager->registerSubsystem<DeferredRenderSystem>(manager->get<LightingRenderSystem>());
+
+	manager->registerSubsystem<MeshRenderSystem>(manager->get<OpaqVoxRenderSystem>());
+	// manager.registerSubsystem<MeshRenderSystem>(manager.get<TransVoxRenderSystem>());
 
 	manager->initialize();
 	manager->start();

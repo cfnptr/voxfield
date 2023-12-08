@@ -1,0 +1,81 @@
+//--------------------------------------------------------------------------------------------------
+// Voxfield - An open source voxel based multiplayer sandbox game.
+// Copyright (C) 2022-2023  Nikita Fediuchin
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//--------------------------------------------------------------------------------------------------
+
+#ifndef VF_CHUNK_GSL
+#define VF_CHUNK_GSL
+
+#include "common/math.gsl"
+
+#define CHUNK_LENGHT 32
+#define CHUNK_SIZE 32768
+
+#define CHUNK_VERT_POS_BITS 14u
+#define CHUNK_VERT_NORM_BITS 3u
+#define CHUNK_VERT_UV_BITS 9u
+
+#define CHUNK_VERT_POS_MASK 16383u // 2 ^ 14 - 1
+#define CHUNK_VERT_NORM_MASK 7u // 2 ^ 3 - 1
+#define CHUNK_VERT_UV_MASK 511u // 2 ^ 9 - 1
+
+struct InstanceData
+{
+	float4x4 mvp;
+};
+
+const float3 chunkVertexNormals[6] = float3[6]
+(
+	float3(-1.0f,  0.0f,  0.0f),
+	float3( 1.0f,  0.0f,  0.0f),
+	float3( 0.0f, -1.0f,  0.0f),
+	float3( 0.0f,  1.0f,  0.0f),
+    float3( 0.0f,  0.0f, -1.0f),
+    float3( 0.0f,  0.0f,  1.0f)
+);
+
+//--------------------------------------------------------------------------------------------------
+// Chunk Vertex Memory Layout
+//
+// data.x (32bit) :
+//   position.x (14bit)
+//   position.y (14bit)
+//   normal.xyz (3bit)
+//   _unused (1bit)
+//
+// data.y (32bit) :
+//   position.z (14bit)
+//   texCoords.x (9bit)
+//   texCoords.y (9bit)
+
+float3 decodeChunkPosition(uint2 data)
+{
+	float3 position = float3(data.x & CHUNK_VERT_POS_MASK,
+		(data.x >> CHUNK_VERT_POS_BITS) & CHUNK_VERT_POS_MASK, data.y & CHUNK_VERT_POS_MASK);
+	return position * (1.0f / (CHUNK_VERT_POS_MASK / CHUNK_LENGHT)) + (CHUNK_LENGHT / -2.0f);
+}
+float3 decodeChunkNormal(uint2 data)
+{
+	return chunkVertexNormals[(data.x >> (CHUNK_VERT_POS_BITS * 2u)) & CHUNK_VERT_NORM_MASK];
+}
+float2 decodeChunkTexCoords(uint2 data)
+{
+	float2 texCoords = float2((data.y >> CHUNK_VERT_POS_BITS) & CHUNK_VERT_UV_MASK,
+		data.y >> (CHUNK_VERT_POS_BITS + CHUNK_VERT_UV_BITS) & CHUNK_VERT_UV_MASK);
+	return texCoords * (1.0f / CHUNK_VERT_UV_MASK);
+}
+
+#endif // VF_CHUNK_GSL
