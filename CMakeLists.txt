@@ -44,6 +44,9 @@ set(VOXFIELD_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/in
 	libraries/garden/libraries/voxy/include)
 set(VOXFIELD_LINK_LIBS garden)
 
+# TODO: remove this setter. This is temporary.
+set(GARDEN_RELEASE_EDITOR ON CACHE BOOL "" FORCE)
+
 set(GARDEN_APP_NAME "Voxfield")
 set(GARDEN_APP_VERSION_MAJOR ${Voxfield_VERSION_MAJOR})
 set(GARDEN_APP_VERSION_MINOR ${Voxfield_VERSION_MINOR})
@@ -58,12 +61,23 @@ add_executable(voxfield-client source/client.cpp
 	${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_SHARED_SOURCES})
 target_include_directories(voxfield-client PUBLIC ${VOXFIELD_INCLUDE_DIRS})
 target_link_libraries(voxfield-client ${VOXFIELD_LINK_LIBS})
-stripExecutable(voxfield-client)
+add_dependencies(voxfield-client packer gslc equi2cube)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+	stripExecutable(voxfield-client)
+endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	packResources(voxfield-client ${GARDEN_APP_CACHES_DIR}
+		${GARDEN_APP_RESOURCES_DIR} ${Garden_SOURCE_DIR}/resources ON)
+endif()
 
 if(VOXFIELD_BUILD_SERVER)
 	file(GLOB_RECURSE VOXFIELD_SERVER_SOURCES source/server/*.cpp)
 	add_executable(voxfield-server source/server.cpp ${VOXFIELD_SERVER_SOURCES})
 	target_include_directories(voxfield-server PUBLIC ${VOXFIELD_INCLUDE_DIRS})
 	target_link_libraries(voxfield-server ${VOXFIELD_LINK_LIBS})
-	stripExecutable(voxfield-server)
+
+	if(CMAKE_BUILD_TYPE STREQUAL "Release")
+		stripExecutable(voxfield-server)
+	endif()
 endif()

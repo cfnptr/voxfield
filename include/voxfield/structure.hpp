@@ -116,12 +116,16 @@ public:
 		{
 			auto entity = manager->createEntity();
 			manager->add<TransformComponent>(entity);
-			manager->add<OpaqVoxRenderComponent>(entity);
+			auto opaqVoxComponent = manager->add<OpaqVoxRenderComponent>(entity);
+			opaqVoxComponent->aabb.setSize(float3(CHUNK_LENGTH));
 			chunk = new Chunk(voxel, position, id, entity);
 		}
 
 		auto hash = posToChunkHash(position);
 		auto result = chunks.emplace(hash, chunk);
+
+		auto transformComponent = manager->get<TransformComponent>(chunk->getEntity());
+		transformComponent->position = position * CHUNK_LENGTH + (CHUNK_LENGTH / 2);
 
 		#if GARDEN_DEBUG
 		if (!result.second)
@@ -134,7 +138,6 @@ public:
 				"hash: " + to_string(posToChunkHash(position)) + ")");
 		}
 
-		auto transformComponent = manager->get<TransformComponent>(chunk->getEntity());
 		transformComponent->name = "Chunk " + position.toString();
 		#endif
 

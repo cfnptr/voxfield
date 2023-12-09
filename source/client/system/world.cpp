@@ -28,8 +28,6 @@ void WorldSystem::initialize()
 	generatorSystem = manager->get<GeneratorSystem>(); 
 	mesherSystem = manager->get<MesherSystem>();
 
-	auto transformSystem = manager->get<TransformSystem>();
-	auto cameraSystem = manager->get<CameraSystem>();
 	auto camera = manager->createEntity();
 	auto transformComponent = manager->add<TransformComponent>(camera);
 	#if GARDEN_DEBUG || GARDEN_EDITOR

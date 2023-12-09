@@ -80,7 +80,6 @@ void GeneratorSystem::generate(const ThreadPool::Task& task)
 //----------------------------------------------------------------------------------------
 bool GeneratorSystem::generateDebugSphere(const void* _data, Chunk* chunk)
 {
-	auto data = (const ChunkData*)_data;
 	auto voxels = chunk->getVoxels();
 	auto center = int3(CHUNK_HALF_LENGTH);
 	auto maxDist2 = CHUNK_HALF_LENGTH * CHUNK_HALF_LENGTH;

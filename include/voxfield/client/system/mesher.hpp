@@ -89,6 +89,13 @@ public:
 	void flush(std::function<void(ChunkMesh&, uint32)> onMesh);
 	ID<Buffer> getVertexBuffer(ChunkMesh& chunkMesh);
 	ID<Buffer> getIndexBuffer() const noexcept { return indexBuffer; }
+	uint32 getIndexBufferSize() const noexcept { return indexBufferSize; }
+
+	GraphicsPipeline::Index getIndexBufferType() const noexcept
+	{
+		return indexBufferSize > UINT16_MAX ?
+			GraphicsPipeline::Index::Uint32 : GraphicsPipeline::Index::Uint16;
+	}
 };
 
 } // namespace voxfield::client

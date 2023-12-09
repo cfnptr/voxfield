@@ -645,20 +645,20 @@ static ID<Buffer> createIndexBuffer(GraphicsSystem* graphicsSystem, uint32 index
 	if (indexCount > UINT16_MAX)
 	{
 		vector<uint32> indices(indexCount);
-		for (uint32 i = 0; i < indexCount; i += 6)
+		for (uint32 i = 0, j = 0; i < indexCount; i += 6, j += 4)
 		{
-			indices[i] = i; indices[i + 1] = i + 1; indices[i + 2] = i + 2;
-			indices[i + 3] = i; indices[i + 4] = i + 2; indices[i + 5] = i + 3;
+			indices[i] = j; indices[i + 1] = j + 1; indices[i + 2] = j + 2;
+			indices[i + 3] = j; indices[i + 4] = j + 2; indices[i + 5] = j + 3;
 		}
 		buffer = graphicsSystem->createBuffer(bind, usage, indices);
 	}
 	else
 	{
 		vector<uint16> indices(indexCount);
-		for (uint16 i = 0; i < indexCount; i += 6)
+		for (uint32 i = 0, j = 0; i < indexCount; i += 6, j += 4)
 		{
-			indices[i] = i; indices[i + 1] = i + 1; indices[i + 2] = i + 2;
-			indices[i + 3] = i; indices[i + 4] = i + 2; indices[i + 5] = i + 3;
+			indices[i] = j; indices[i + 1] = j + 1; indices[i + 2] = j + 2;
+			indices[i + 3] = j; indices[i + 4] = j + 2; indices[i + 5] = j + 3;
 		}
 		buffer = graphicsSystem->createBuffer(bind, usage, indices);
 	}

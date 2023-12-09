@@ -28,7 +28,7 @@ fi
 echo ""
 echo "Building project..."
 
-cmake --build build/ --config Release
+cmake --build build/ --config Release -j $(nproc)
 status=$?
 
 if [ $status -ne 0 ]; then

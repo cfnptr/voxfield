@@ -104,6 +104,7 @@ void VoxGeoRenderSystem::prepareDraw(const float4x4& viewProj,
 	instanceMap = (InstanceData*)instanceBufferView->getMap();
 	framebufferSize = framebufferView->getSize();
 	indexBuffer = mesherSystem->getIndexBuffer();
+	indexBufferType = mesherSystem->getIndexBufferType();
 }
 void VoxGeoRenderSystem::beginDraw(int32 taskIndex)
 {
@@ -131,10 +132,8 @@ void VoxGeoRenderSystem::draw(
 	pushConstants->instanceIndex = drawIndex;
 	pipelineView->pushConstantsAsync(taskIndex);
 
-	auto indexType = voxGeoComponent->indexCount > UINT16_MAX ?
-		GraphicsPipeline::Index::Uint32 : GraphicsPipeline::Index::Uint16;
 	pipelineView->drawIndexedAsync(taskIndex, voxGeoComponent->vertexBuffer,
-		indexBuffer, indexType, voxGeoComponent->indexCount);
+		indexBuffer, indexBufferType, voxGeoComponent->indexCount);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -200,6 +199,7 @@ void VoxGeoShadRenderSystem::prepareDraw(const float4x4& viewProj,
 	pipelineView->updateFramebuffer(framebuffer);
 	framebufferSize = framebufferView->getSize();
 	indexBuffer = mesherSystem->getIndexBuffer();
+	indexBufferType = mesherSystem->getIndexBufferType();
 }
 void VoxGeoShadRenderSystem::beginDraw(int32 taskIndex)
 {
@@ -223,10 +223,8 @@ void VoxGeoShadRenderSystem::draw(
 	pushConstants->mvp = viewProj * model;
 	pipelineView->pushConstantsAsync(taskIndex);
 
-	auto indexType = voxGeoShadComponent->indexCount > UINT16_MAX ?
-		GraphicsPipeline::Index::Uint32 : GraphicsPipeline::Index::Uint16;
 	pipelineView->drawIndexedAsync(taskIndex, voxGeoShadComponent->vertexBuffer,
-		indexBuffer, indexType, voxGeoShadComponent->indexCount);
+		indexBuffer, indexBufferType, voxGeoShadComponent->indexCount);
 }
 
 ID<GraphicsPipeline> VoxGeoShadRenderSystem::getPipeline()

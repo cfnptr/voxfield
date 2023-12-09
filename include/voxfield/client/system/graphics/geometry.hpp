@@ -53,6 +53,7 @@ protected:
 	InstanceData* instanceMap = nullptr;
 	int2 framebufferSize = int2(0);
 	ID<Buffer> indexBuffer = {};
+	GraphicsPipeline::Index indexBufferType = {};
 
 	void initialize() override;
 	
@@ -85,6 +86,7 @@ protected:
 	ID<Buffer> indexBuffer = {};
 	View<GraphicsPipeline> pipelineView = {};
 	int2 framebufferSize = int2(0);
+	GraphicsPipeline::Index indexBufferType = {};
 
 	void initialize() override;
 

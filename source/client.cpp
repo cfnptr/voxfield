@@ -37,6 +37,8 @@ using namespace voxfield::client;
 //--------------------------------------------------------------------------------------------------
 GARDEN_MAIN
 {
+	// TODO: detect if avx2 instructions are supported in the OS if avx2 is enabled.
+
 	setThreadForegroundPriority();
 
 	auto manager = new Manager();
@@ -60,7 +62,7 @@ GARDEN_MAIN
 	manager->createSubsystem<GraphicsSystem, DeferredRenderSystem>(true);
 	manager->createSubsystem<GraphicsSystem, OpaqVoxRenderSystem>();
 
-	#if GARDEN_DEBUG
+	#if GARDEN_DEBUG || GARDEN_EDITOR
 	manager->createSubsystem<GraphicsSystem, EditorRenderSystem>();
 	#endif
 
