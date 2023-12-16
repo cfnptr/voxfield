@@ -41,8 +41,9 @@ static void createInstanceBuffers(GraphicsSystem* graphicsSystem,
 
 	for (uint32 i = 0; i < swapchainSize; i++)
 	{
-		auto buffer = graphicsSystem->createBuffer(
-			Buffer::Bind::Storage, Buffer::Usage::CpuToGpu, bufferSize);
+		auto buffer = graphicsSystem->createBuffer(Buffer::Bind::Storage,
+			Buffer::Access::SequentialWrite, bufferSize,
+			Buffer::Usage::Auto, Buffer::Strategy::Size);
 		SET_RESOURCE_DEBUG_NAME(graphicsSystem, buffer,
 			"buffer.storage.geometry.instances" + to_string(i));
 		instanceBuffers[i].push_back(buffer);
@@ -69,7 +70,8 @@ bool VoxGeoRenderSystem::isDrawReady()
 {
 	auto graphicsSystem = getGraphicsSystem();
 	auto pipelineView = graphicsSystem->get(pipeline);
-	if (!pipelineView->isReady()) return false;
+	auto indexBufferView = graphicsSystem->get(mesherSystem->getIndexBuffer());
+	if (!pipelineView->isReady() || !indexBufferView->isReady()) return false;
 
 	if (!descriptorSet)
 	{
@@ -97,11 +99,11 @@ void VoxGeoRenderSystem::prepareDraw(const float4x4& viewProj,
 		SET_RESOURCE_DEBUG_NAME(graphicsSystem, descriptorSet, "descriptorSet.geometry");
 	}
 
-	auto swapchainIndex = graphicsSystem->getSwapchainIndex();
-	auto framebufferView = graphicsSystem->get(framebuffer);
+	swapchainIndex = graphicsSystem->getSwapchainIndex();
 	auto instanceBufferView = graphicsSystem->get(instanceBuffers[swapchainIndex][0]);
 	pipelineView = graphicsSystem->get(pipeline);
 	instanceMap = (InstanceData*)instanceBufferView->getMap();
+	auto framebufferView = graphicsSystem->get(framebuffer);
 	framebufferSize = framebufferView->getSize();
 	indexBuffer = mesherSystem->getIndexBuffer();
 	indexBufferType = mesherSystem->getIndexBufferType();
@@ -110,19 +112,17 @@ void VoxGeoRenderSystem::beginDraw(int32 taskIndex)
 {
 	pipelineView->bindAsync(0, taskIndex);
 	pipelineView->setViewportScissorAsync(float4(float2(0), framebufferSize), taskIndex);
-	pipelineView->bindDescriptorSetAsync(descriptorSet, 0, taskIndex);
+	pipelineView->bindDescriptorSetAsync(descriptorSet, swapchainIndex, taskIndex);
 }
 
 //--------------------------------------------------------------------------------------------------
-void VoxGeoRenderSystem::draw(
-	TransformComponent* transformComponent, MeshRenderComponent* meshRenderComponent,
+void VoxGeoRenderSystem::draw(MeshRenderComponent* meshRenderComponent,
 	const float4x4& viewProj, const float4x4& model, uint32 drawIndex, int32 taskIndex)
 {
 	auto voxGeoComponent = (VoxGeoRenderComponent*)meshRenderComponent;
 	if (!voxGeoComponent->vertexBuffer) return;
 
-	auto graphicsSystem = getGraphicsSystem();
-	auto vertexBufferView = graphicsSystem->get(voxGeoComponent->vertexBuffer);
+	auto vertexBufferView = getGraphicsSystem()->get(voxGeoComponent->vertexBuffer);
 	if (!vertexBufferView->isReady()) return;
 
 	auto& instance = instanceMap[drawIndex];
@@ -140,8 +140,6 @@ void VoxGeoRenderSystem::draw(
 void VoxGeoRenderSystem::finalizeDraw(const float4x4& viewProj,
 	ID<Framebuffer> framebuffer, uint32 drawCount)
 {
-	auto graphicsSystem = getGraphicsSystem();
-	auto swapchainIndex = graphicsSystem->getSwapchainIndex();
 	auto instanceBufferView = getGraphicsSystem()->get(instanceBuffers[swapchainIndex][0]);
 	instanceBufferView->flush(drawCount * sizeof(InstanceData));
 }
@@ -207,8 +205,7 @@ void VoxGeoShadRenderSystem::beginDraw(int32 taskIndex)
 	pipelineView->setViewportScissorAsync(float4(float2(0), framebufferSize), taskIndex);
 }
 
-void VoxGeoShadRenderSystem::draw(
-	TransformComponent* transformComponent, MeshRenderComponent* meshRenderComponent,
+void VoxGeoShadRenderSystem::draw(MeshRenderComponent* meshRenderComponent,
 	const float4x4& viewProj, const float4x4& model, uint32 drawIndex, int32 taskIndex)
 {
 	auto voxGeoShadComponent = (VoxGeoShadRenderComponent*)meshRenderComponent;

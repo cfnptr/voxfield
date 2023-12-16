@@ -27,7 +27,9 @@ namespace voxfield
 {
 
 // Optimal for hash: 64bit / 3
-#define STRUCTURE_POS_BITS 21
+#define STRUCTURE_POS_BITS 21u
+// 2 ^ STRUCTURE_POS_BITS - 1
+#define STRUCTURE_POS_MASK 2097151u 
 // 2 ^ STRUCTURE_POS_BITS
 #define STRUCTURE_LENGTH 2097152
 // STRUCTURE_LENGTH / 2
@@ -39,22 +41,25 @@ namespace voxfield
 
 using namespace voxfield::client;
 
-static constexpr int64 posToChunkHash(int32 x, int32 y, int32 z) noexcept
+static constexpr uint64 posToChunkHash(int32 x, int32 y, int32 z) noexcept
 {
-	return (((int64)(z) << 42LL) | ((int64)(y) << 21LL) | (int64)(x));
+	return
+		(((uint64)(z - STRUCTURE_POS_MIN) << (STRUCTURE_POS_BITS * 2u)) |
+		((uint64)(y - STRUCTURE_POS_MIN) << STRUCTURE_POS_BITS) |
+		(uint64)(x - STRUCTURE_POS_MIN));
 }
-static constexpr int64 posToChunkHash(const int3& position) noexcept
+static constexpr uint64 posToChunkHash(const int3& position) noexcept
 {
 	return posToChunkHash(position.x, position.y, position.z);
 }
 
-static constexpr void hashToChunkPos(int64 hash, int32& x, int32& y, int32& z) noexcept
+static constexpr void hashToChunkPos(uint64 hash, int32& x, int32& y, int32& z) noexcept
 {
-	x = hash & (int64)(STRUCTURE_LENGTH - 1);
-	y = hash & ((int64)(STRUCTURE_LENGTH - 1) << 21LL);
-	z = hash & ((int64)(STRUCTURE_LENGTH - 1) << 42LL);
+	x = (int32)(hash & STRUCTURE_POS_MASK) + STRUCTURE_POS_MIN;
+	y = (int32)((hash >> STRUCTURE_POS_BITS) & STRUCTURE_POS_MASK) + STRUCTURE_POS_MIN;
+	z = (int32)((hash >> (STRUCTURE_POS_BITS * 2u)) & STRUCTURE_POS_MASK) + STRUCTURE_POS_MIN;
 }
-static constexpr void hashToChunkPos(int64 hash, int3& position) noexcept
+static constexpr void hashToChunkPos(uint64 hash, int3& position) noexcept
 {
 	hashToChunkPos(hash, position.x, position.y, position.z);
 }
@@ -64,8 +69,9 @@ class Structure
 {
 protected:
 	Manager* manager = nullptr;
+	GraphicsSystem* graphicsSystem = nullptr;
 	stack<Chunk*>* freeChunks = nullptr;
-	map<int64, Chunk*> chunks;
+	map<uint64, Chunk*> chunks;
 	uint32 id = 0;
 public:
 	Structure() = default;
@@ -75,12 +81,13 @@ public:
 		this->manager = manager;
 		this->freeChunks = freeChunks;
 		this->id = id;
+		graphicsSystem = manager->get<GraphicsSystem>();
 	}
 
-	map<int64, Chunk*>& getChunks() noexcept { return chunks; }
-	const map<int64, Chunk*>& getChunks() const noexcept { return chunks; }
+	map<uint64, Chunk*>& getChunks() noexcept { return chunks; }
+	const map<uint64, Chunk*>& getChunks() const noexcept { return chunks; }
 
-	Chunk* getChunk(int64 hash)
+	Chunk* getChunk(uint64 hash)
 	{
 		return chunks.at(hash);
 	}
@@ -89,7 +96,7 @@ public:
 		return chunks.at(posToChunkHash(position));
 	}
 
-	bool tryGetChunk(int64 hash, Chunk*& chunk)
+	bool tryGetChunk(uint64 hash, Chunk*& chunk)
 	{
 		auto result = chunks.find(hash);
 		if (result == chunks.end()) return false;
@@ -105,29 +112,30 @@ public:
 	Chunk* addChunk(const int3& position, Voxel voxel = NULL_VOXEL)
 	{
 		Chunk* chunk;
+		View<TransformComponent> transformComponent;
+
 		if (freeChunks && freeChunks->size() > 0)
 		{
 			chunk = freeChunks->top();
 			freeChunks->pop();
 			chunk->fill(voxel);
 			chunk->state = ChunkState::Allocated;
+			transformComponent = manager->get<TransformComponent>(chunk->getEntity());
 		}
 		else
 		{
 			auto entity = manager->createEntity();
-			manager->add<TransformComponent>(entity);
+			transformComponent = manager->add<TransformComponent>(entity);
 			auto opaqVoxComponent = manager->add<OpaqVoxRenderComponent>(entity);
 			opaqVoxComponent->aabb.setSize(float3(CHUNK_LENGTH));
+			opaqVoxComponent->isEnabled = false;
 			chunk = new Chunk(voxel, position, id, entity);
 		}
 
 		auto hash = posToChunkHash(position);
 		auto result = chunks.emplace(hash, chunk);
 
-		auto transformComponent = manager->get<TransformComponent>(chunk->getEntity());
-		transformComponent->position = position * CHUNK_LENGTH + (CHUNK_LENGTH / 2);
-
-		#if GARDEN_DEBUG
+		#if GARDEN_DEBUG || GARDEN_EDITOR
 		if (!result.second)
 		{
 			manager->destroy(chunk->getEntity());
@@ -141,6 +149,7 @@ public:
 		transformComponent->name = "Chunk " + position.toString();
 		#endif
 
+		transformComponent->position = position * CHUNK_LENGTH + (CHUNK_LENGTH / 2);
 		return chunk;
 	}
 
@@ -152,7 +161,7 @@ public:
 	}
 
 //----------------------------------------------------------------------------------------
-	void removeChunk(int64 hash)
+	void removeChunk(uint64 hash)
 	{
 		auto result = chunks.find(hash);
 
@@ -174,7 +183,7 @@ public:
 		removeChunk(posToChunkHash(position));
 	}
 
-	bool tryRemoveChunk(int64 hash)
+	bool tryRemoveChunk(uint64 hash)
 	{
 		auto result = chunks.find(hash);
 		if (result == chunks.end()) return false;
@@ -190,10 +199,15 @@ public:
 	void removeOutOfView(const int3& position, int32 radius)
 	{
 		auto radius2 = radius * radius;
-		for (auto i = chunks.begin(); i != chunks.end(); i++)
+		for (auto i = chunks.begin(); i != chunks.end();)
 		{
 			int3 chunkPosition; hashToChunkPos(i->first, chunkPosition);
-			if (distance2(position, chunkPosition) <= radius2) continue;
+			if (distance2(position, chunkPosition) <= radius2) { i++; continue; }
+			auto opaqVoxComponent = manager->get<
+				OpaqVoxRenderComponent>(i->second->getEntity());
+			graphicsSystem->destroy(opaqVoxComponent->vertexBuffer);
+			opaqVoxComponent->isEnabled = false;
+			opaqVoxComponent->vertexBuffer = {};
 			if (freeChunks) freeChunks->push(i->second);
 			i = chunks.erase(i);
 		}

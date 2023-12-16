@@ -65,6 +65,8 @@ void GeneratorSystem::generate(const ThreadPool::Task& task)
 
 	switch (genType)
 	{
+	case GenType::DebugSoloVoxel:
+		chunk->isEmpty = !generateDebugSoloVoxel(data, chunk); break;
 	case GenType::DebugSphere:
 		chunk->isEmpty = !generateDebugSphere(data, chunk); break;
 	default: abort();
@@ -78,11 +80,16 @@ void GeneratorSystem::generate(const ThreadPool::Task& task)
 }
 
 //----------------------------------------------------------------------------------------
+bool GeneratorSystem::generateDebugSoloVoxel(const void* _data, Chunk* chunk)
+{
+	chunk->set(CHUNK_HALF_LENGTH, CHUNK_HALF_LENGTH, CHUNK_HALF_LENGTH, DEBUG_VOXEL);
+	return true;
+}
 bool GeneratorSystem::generateDebugSphere(const void* _data, Chunk* chunk)
 {
 	auto voxels = chunk->getVoxels();
 	auto center = int3(CHUNK_HALF_LENGTH);
-	auto maxDist2 = CHUNK_HALF_LENGTH * CHUNK_HALF_LENGTH;
+	auto maxDist2 = (CHUNK_HALF_LENGTH / 2) * (CHUNK_HALF_LENGTH / 2);
 	psize index = 0;
 
 	for (uint8 z = 0; z < CHUNK_LENGTH; z++)

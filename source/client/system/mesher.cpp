@@ -639,7 +639,9 @@ static ID<Buffer> createIndexBuffer(GraphicsSystem* graphicsSystem, uint32 index
 	GARDEN_ASSERT(indexCount % 6 == 0);
 
 	const auto bind = Buffer::Bind::TransferDst | Buffer::Bind::Index;
-	const auto usage = Buffer::Usage::GpuOnly;
+	const auto access = Buffer::Access::None;
+	const auto usage = Buffer::Usage::PreferGPU;
+	const auto strategy = Buffer::Strategy::Size;
 
 	ID<Buffer> buffer;
 	if (indexCount > UINT16_MAX)
@@ -648,9 +650,9 @@ static ID<Buffer> createIndexBuffer(GraphicsSystem* graphicsSystem, uint32 index
 		for (uint32 i = 0, j = 0; i < indexCount; i += 6, j += 4)
 		{
 			indices[i] = j; indices[i + 1] = j + 1; indices[i + 2] = j + 2;
-			indices[i + 3] = j; indices[i + 4] = j + 2; indices[i + 5] = j + 3;
+			indices[i + 3] = j + 2; indices[i + 4] = j + 3; indices[i + 5] = j;
 		}
-		buffer = graphicsSystem->createBuffer(bind, usage, indices);
+		buffer = graphicsSystem->createBuffer(bind, access, indices, 0, 0, usage, strategy);
 	}
 	else
 	{
@@ -660,8 +662,10 @@ static ID<Buffer> createIndexBuffer(GraphicsSystem* graphicsSystem, uint32 index
 			indices[i] = j; indices[i + 1] = j + 1; indices[i + 2] = j + 2;
 			indices[i + 3] = j; indices[i + 4] = j + 2; indices[i + 5] = j + 3;
 		}
-		buffer = graphicsSystem->createBuffer(bind, usage, indices);
+		buffer = graphicsSystem->createBuffer(bind, access, indices, 0, 0, usage, strategy);
 	}
+
+	SET_RESOURCE_DEBUG_NAME(graphicsSystem, buffer, "buffer.index.chunk");
 	return buffer;
 }
 
@@ -715,9 +719,10 @@ void MesherSystem::generate(const ThreadPool::Task& task)
 		ChunkMesh mesh =
 		{
 			BufferExt::create(Buffer::Bind::TransferDst | Buffer::Bind::Vertex,
-				Buffer::Usage::GpuOnly, bufferByteSize, 0),
-			BufferExt::create(Buffer::Bind::TransferSrc,
-				Buffer::Usage::CpuOnly, bufferByteSize, 0),
+				Buffer::Access::None, Buffer::Usage::PreferGPU,
+				Buffer::Strategy::Size, bufferByteSize, 0),
+			BufferExt::create(Buffer::Bind::TransferSrc, Buffer::Access::SequentialWrite,
+				Buffer::Usage::Auto, Buffer::Strategy::Speed, bufferByteSize, 0),
 			cluster->c->getStructureID(),
 			cluster->c->getPosition()
 		};
@@ -731,8 +736,10 @@ void MesherSystem::generate(const ThreadPool::Task& task)
 	{
 		ChunkMesh mesh =
 		{
-			BufferExt::create((Buffer::Bind)0, (Buffer::Usage)0, 0),
-			BufferExt::create((Buffer::Bind)0, (Buffer::Usage)0, 0),
+			BufferExt::create((Buffer::Bind)0, (Buffer::Access)0,
+				(Buffer::Usage)0, (Buffer::Strategy)0, 0),
+			BufferExt::create((Buffer::Bind)0, (Buffer::Access)0,
+				(Buffer::Usage)0, (Buffer::Strategy)0, 0),
 			cluster->c->getStructureID(),
 			cluster->c->getPosition()
 		};
@@ -778,10 +785,14 @@ void MesherSystem::flush(std::function<void(ChunkMesh&, uint32)> onMesh)
 		biggestIndexCount = std::max(biggestIndexCount, indexCount);
 		onMesh(mesh, indexCount);
 
+		GraphicsAPI::isRunning = false;
 		BufferExt::destroy(mesh.stagingBuffer);
 		BufferExt::destroy(mesh.vertexBuffer);
+		GraphicsAPI::isRunning = true;
 	}
+
 	meshes.clear();
+	meshMutex.unlock();
 
 	if (biggestIndexCount > indexBufferSize)
 	{
@@ -789,16 +800,18 @@ void MesherSystem::flush(std::function<void(ChunkMesh&, uint32)> onMesh)
 		indexBuffer = createIndexBuffer(graphicsSystem, biggestIndexCount);
 		indexBufferSize = biggestIndexCount;
 	}
-	
-	meshMutex.unlock();
 }
+
+//--------------------------------------------------------------------------------------------------
 ID<Buffer> MesherSystem::getVertexBuffer(ChunkMesh& chunkMesh)
 {
+	// TODO: measure if default memory strategy is better
+	GARDEN_ASSERT(chunkMesh.vertexBuffer.getBinarySize() > 0);
 	auto vertexBuffer = GraphicsAPI::bufferPool.create(
-		Buffer::Bind::TransferDst | Buffer::Bind::Vertex,
-		Buffer::Usage::GpuOnly, 0);
-	auto stagingBuffer = GraphicsAPI::bufferPool.create(
-		Buffer::Bind::TransferSrc, Buffer::Usage::CpuOnly, 0);
+		Buffer::Bind::TransferDst | Buffer::Bind::Vertex, Buffer::Access::None,
+		Buffer::Usage::PreferGPU, Buffer::Strategy::Size, 0);
+	auto stagingBuffer = GraphicsAPI::bufferPool.create(Buffer::Bind::TransferSrc,
+		Buffer::Access::SequentialWrite, Buffer::Usage::Auto, Buffer::Strategy::Speed, 0);
 	auto vertexView = GraphicsAPI::bufferPool.get(vertexBuffer);
 	auto stagingView = GraphicsAPI::bufferPool.get(stagingBuffer);
 	BufferExt::moveInternalObjects(chunkMesh.vertexBuffer, **vertexView);
@@ -807,9 +820,7 @@ ID<Buffer> MesherSystem::getVertexBuffer(ChunkMesh& chunkMesh)
 		"buffer.vertex.chunk." + chunkMesh.position.toString());
 	SET_RESOURCE_DEBUG_NAME(graphicsSystem, stagingBuffer,
 		"buffer.staging.chunk." + chunkMesh.position.toString());
-	graphicsSystem->startRecording(CommandBufferType::TransferOnly);
 	Buffer::copy(stagingBuffer, vertexBuffer);
-	graphicsSystem->stopRecording();
 	GraphicsAPI::bufferPool.destroy(stagingBuffer);
 	return vertexBuffer;
 }

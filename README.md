@@ -38,9 +38,8 @@ If you want, you can freely disable it and compile for any other architecture, i
 ## Build Voxfield
 
 1. Follow Garden building [instructions](https://github.com/cfnptr/garden/blob/main/BUILDING.md)
-1. Clone git repository using terminal. (It may take some time)
-   ```git clone --recursive https://github.com/cfnptr/voxfield```
-3. Open voxfield directory using IDE or use [build.sh](build.sh) script
+1. Run ```git clone --recursive https://github.com/cfnptr/voxfield``` using **Terminal** (This may take some time)
+3. Open voxfield directory using **IDE** or use [build.sh](build.sh) script
 
 ### CMake options
 

@@ -53,6 +53,7 @@ protected:
 	InstanceData* instanceMap = nullptr;
 	int2 framebufferSize = int2(0);
 	ID<Buffer> indexBuffer = {};
+	uint32 swapchainIndex = 0;
 	GraphicsPipeline::Index indexBufferType = {};
 
 	void initialize() override;
@@ -61,8 +62,7 @@ protected:
 	void prepareDraw(const float4x4& viewProj,
 		ID<Framebuffer> framebuffer, uint32 drawCount) override;
 	void beginDraw(int32 taskIndex) override;
-	void draw(TransformComponent* transformComponent,
-		MeshRenderComponent* meshRenderComponent, const float4x4& viewProj,
+	void draw(MeshRenderComponent* meshRenderComponent, const float4x4& viewProj,
 		const float4x4& model, uint32 drawIndex, int32 taskIndex) override;
 	void finalizeDraw(const float4x4& viewProj,
 		ID<Framebuffer> framebuffer, uint32 drawCount) override;
@@ -95,8 +95,7 @@ protected:
 		ID<Framebuffer> framebuffer, uint32 drawCount) override;
 	void beginDraw(int32 taskIndex) override;
 	
-	void draw(TransformComponent* transformComponent,
-		MeshRenderComponent* meshRenderComponent, const float4x4& viewProj,
+	void draw(MeshRenderComponent* meshRenderComponent, const float4x4& viewProj,
 		const float4x4& model, uint32 drawIndex, int32 taskIndex) override;
 
 	virtual ID<GraphicsPipeline> createPipeline() = 0;

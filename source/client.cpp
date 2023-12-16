@@ -20,8 +20,12 @@
 #include "garden/system/fpv.hpp"
 #include "garden/system/settings.hpp"
 #include "garden/system/resource.hpp"
+#include "garden/system/graphics/fxaa.hpp"
 #include "garden/system/graphics/editor.hpp"
-
+#include "garden/system/graphics/skybox.hpp"
+#include "garden/system/graphics/lighting.hpp"
+#include "garden/system/graphics/tone-mapping.hpp"
+#include "garden/system/graphics/auto-exposure.hpp"
 #include "voxfield/client/system/world.hpp"
 
 extern "C"
@@ -34,8 +38,7 @@ using namespace garden;
 using namespace voxfield;
 using namespace voxfield::client;
 
-//--------------------------------------------------------------------------------------------------
-GARDEN_MAIN
+static void run()
 {
 	// TODO: detect if avx2 instructions are supported in the OS if avx2 is enabled.
 
@@ -60,21 +63,49 @@ GARDEN_MAIN
 
 	manager->createSubsystem<GraphicsSystem, MeshRenderSystem>(true);
 	manager->createSubsystem<GraphicsSystem, DeferredRenderSystem>(true);
+	manager->createSubsystem<GraphicsSystem, SkyboxRenderSystem>();
 	manager->createSubsystem<GraphicsSystem, OpaqVoxRenderSystem>();
+	manager->createSubsystem<GraphicsSystem, LightingRenderSystem>();
+	manager->createSubsystem<GraphicsSystem, BloomRenderSystem>();
+	manager->createSubsystem<GraphicsSystem, ToneMappingRenderSystem>();
+	manager->createSubsystem<GraphicsSystem, AutoExposureRenderSystem>();
+	manager->createSubsystem<GraphicsSystem, FxaaRenderSystem>();
 
 	#if GARDEN_DEBUG || GARDEN_EDITOR
 	manager->createSubsystem<GraphicsSystem, EditorRenderSystem>();
 	#endif
 
 	manager->registerSubsystem<DeferredRenderSystem>(manager->get<MeshRenderSystem>());
-	// manager->registerSubsystem<DeferredRenderSystem>(manager->get<LightingRenderSystem>());
+	manager->registerSubsystem<DeferredRenderSystem>(manager->get<LightingRenderSystem>());
+	manager->registerSubsystem<DeferredRenderSystem>(manager->get<SkyboxRenderSystem>());
+	manager->registerSubsystem<DeferredRenderSystem>(manager->get<BloomRenderSystem>());
+	manager->registerSubsystem<DeferredRenderSystem>(manager->get<ToneMappingRenderSystem>());
+	manager->registerSubsystem<DeferredRenderSystem>(manager->get<FxaaRenderSystem>());
 
 	manager->registerSubsystem<MeshRenderSystem>(manager->get<OpaqVoxRenderSystem>());
 	// manager.registerSubsystem<MeshRenderSystem>(manager.get<TransVoxRenderSystem>());
 
 	manager->initialize();
 	manager->start();
-	
+
 	delete manager;
+}
+
+//--------------------------------------------------------------------------------------------------
+GARDEN_MAIN
+{
+	#if GARDEN_DEBUG
+	run();
+	#else
+	try
+	{
+		run();
+	}
+	catch (const std::exception& e)
+	{
+		GARDEN_MESSAGE_ERROR(e.what());
+		return EXIT_FAILURE;
+	}
+	#endif
 	return EXIT_SUCCESS;
 }

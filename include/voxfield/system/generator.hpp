@@ -28,7 +28,7 @@ using namespace garden;
 
 enum class GenType : uint8
 {
-	DebugSphere, Count
+	DebugSoloVoxel, DebugSphere, Count
 };
 
 class GeneratorSystem final : public System
@@ -43,6 +43,7 @@ class GeneratorSystem final : public System
 	void terminate() final;
 
 	static void generate(const ThreadPool::Task& task);
+	static bool generateDebugSoloVoxel(const void* data, Chunk* chunk);
 	static bool generateDebugSphere(const void* data, Chunk* chunk);
 	
 	friend class ecsm::Manager;

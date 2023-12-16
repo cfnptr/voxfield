@@ -21,12 +21,16 @@
 using namespace voxfield;
 using namespace voxfield::client;
 
+#include "garden/system/graphics/skybox.hpp" // TODO: remove
+#include "garden/system/graphics/lighting.hpp" // TODO: remove
+
 void WorldSystem::initialize()
 {
 	auto manager = getManager();
 	graphicsSystem = manager->get<GraphicsSystem>();
 	generatorSystem = manager->get<GeneratorSystem>(); 
 	mesherSystem = manager->get<MesherSystem>();
+	structure = Structure(manager, WORLD_STRUCTURE_ID, &freeChunks);
 
 	auto camera = manager->createEntity();
 	auto transformComponent = manager->add<TransformComponent>(camera);
@@ -37,23 +41,46 @@ void WorldSystem::initialize()
 	manager->add<CameraComponent>(camera);
 	graphicsSystem->camera = camera;
 
+	auto sun = manager->createEntity();
+	transformComponent = manager->add<TransformComponent>(sun);
+	transformComponent->rotation = lookAtQuat(normalize(-float3(1.0f, 6.0f, 2.0f)));
+	#if GARDEN_DEBUG || GARDEN_EDITOR
+	transformComponent->name = "Sun";
+	#endif
+	manager->add<DoNotDestroyComponent>(sun);
+	graphicsSystem->directionalLight = sun;
+
 	// TODO: load mods voxels.
 	registry.finalize();
-
-	structure = Structure(manager, WORLD_STRUCTURE_ID, &freeChunks);
 }
+
+static bool isCubeLoaded = false; // TODO: remove
 
 //--------------------------------------------------------------------------------------------------
 void WorldSystem::update()
 {
 	if (!graphicsSystem->camera) return;
 
+	if (!isCubeLoaded)
+	{
+		// TODO: temporal, use physical atmosphere.
+		auto manager = getManager();
+		auto lightingSystem = manager->get<LightingRenderSystem>();
+		auto lightingComponent = manager->add<LightingRenderComponent>(graphicsSystem->camera);
+		lightingSystem->loadCubemap("cubemaps/pure-sky",
+			lightingComponent->cubemap, lightingComponent->sh, lightingComponent->specular);
+		lightingComponent->descriptorSet = lightingSystem->createDescriptorSet(
+			lightingComponent->sh, lightingComponent->specular);
+
+		auto skyboxComponent = manager->add<SkyboxRenderComponent>(graphicsSystem->camera);
+		skyboxComponent->cubemap = lightingComponent->cubemap;
+		isCubeLoaded = true;
+	}
+
 	auto manager = getManager();
 	auto cameraTransform = manager->get<TransformComponent>(graphicsSystem->camera);
-	auto clampedPosition = clamp(cameraTransform->position,
-		float3(minBorder), float3(maxBorder));
-	cameraTransform->position = clampedPosition;
-	auto cameraPosition = worldToChunkPos(clampedPosition);
+	auto cameraPosition = clamp(worldToChunkPos(
+		cameraTransform->position), int3(minBorder), int3(maxBorder));
 	structure.removeOutOfView(cameraPosition, chunkViewRadius + 1);
 
 	generatorSystem->flush([this](const Chunk* genChunk)
@@ -70,6 +97,7 @@ void WorldSystem::update()
 		worldChunk->isEmpty = genChunk->isEmpty;
 	});
 
+	graphicsSystem->startRecording(CommandBufferType::TransferOnly);
 	mesherSystem->flush([this](MesherSystem::ChunkMesh& chunkMesh, uint32 indexCount)
 	{
 		Chunk* worldChunk;
@@ -79,14 +107,15 @@ void WorldSystem::update()
 		{
 			auto opaqVoxComponent = getManager()->get<
 				OpaqVoxRenderComponent>(worldChunk->getEntity());
+			opaqVoxComponent->isEnabled = true;
 			opaqVoxComponent->vertexBuffer = mesherSystem->getVertexBuffer(chunkMesh);
 			opaqVoxComponent->indexCount = indexCount;
 		}
 		worldChunk->state = ChunkState::Meshed;
 	});
+	graphicsSystem->stopRecording();
 
 	auto chunkViewRadius2 = (int32)(chunkViewRadius * chunkViewRadius);
-
 	for (int16 z = 0; z <= chunkViewRadius;)
 	{
 		for (int16 y = 0; y <= chunkViewRadius;)
@@ -105,7 +134,7 @@ void WorldSystem::update()
 				if (chunk->state == ChunkState::Allocated)
 				{
 					generatorSystem->generateChunk(chunkPosition,
-						WORLD_STRUCTURE_ID, GenType::DebugSphere);
+						WORLD_STRUCTURE_ID, GenType::DebugSoloVoxel);
 					chunk->state = ChunkState::Generating;
 				}
 				else if (chunk->state == ChunkState::Generated)

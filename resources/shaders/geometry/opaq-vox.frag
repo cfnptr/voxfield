@@ -22,6 +22,7 @@ pipelineState
 {
 	depthTesting = on;
 	depthWriting = on;
+	frontFace = clockwise;
 }
 
 in float2 fs.texCoords;

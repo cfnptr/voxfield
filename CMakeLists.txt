@@ -55,10 +55,20 @@ set(GARDEN_APP_RESOURCES_DIR ${PROJECT_SOURCE_DIR}/resources)
 set(GARDEN_APP_CACHES_DIR ${PROJECT_SOURCE_DIR}/.caches)
 add_subdirectory(libraries/garden)
 
-file(GLOB_RECURSE VOXFIELD_SHARED_SOURCES source/shared/*.cpp)
+file(GLOB_RECURSE VOXFIELD_CORE_SOURCES source/core/*.cpp)
 file(GLOB_RECURSE VOXFIELD_CLIENT_SOURCES source/client/*.cpp)
-add_executable(voxfield-client source/client.cpp
-	${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_SHARED_SOURCES})
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		add_executable(voxfield-client WIN32 source/client.cpp
+			${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
+	else()
+		add_executable(voxfield-client source/client.cpp
+			${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
+	endif()
+else()
+	add_executable(voxfield-client source/client.cpp
+		${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
+endif()
 target_include_directories(voxfield-client PUBLIC ${VOXFIELD_INCLUDE_DIRS})
 target_link_libraries(voxfield-client ${VOXFIELD_LINK_LIBS})
 add_dependencies(voxfield-client packer gslc equi2cube)
