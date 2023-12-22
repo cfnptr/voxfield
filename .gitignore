@@ -7,6 +7,7 @@
 .build-debug
 .build-release
 .build-xcode
+build
 resources/garden/models/sponza
 
 ### C ###
