@@ -98,13 +98,9 @@ bool GeneratorSystem::generateDebugSphere(const void* _data, Chunk* chunk)
 		{
 			for (uint8 x = 0; x < CHUNK_LENGTH; x++)
 			{
-				if (x == 0 || x == CHUNK_LENGTH - 1 ||
-					y == 0 || y == CHUNK_LENGTH - 1 ||
-					z == 0 || z == CHUNK_LENGTH - 1 ||
-					distance2(int3(x, y, z), center) < maxDist2)
-				{
-					voxels[index++] = DEBUG_VOXEL;
-				}
+				if (distance2(int3(x, y, z), center) < maxDist2)
+					voxels[index] = DEBUG_VOXEL;
+				index++;
 			}
 		}
 	}

@@ -55,10 +55,10 @@ enum class ChunkState : uint8
 struct Chunk : public Chunk3<CHUNK_LENGTH, CHUNK_LENGTH, CHUNK_LENGTH, Voxel>
 {
 protected:
-	int3 position = int3(0);
 	uint32 structureID = 0;
 	ID<Entity> entity = {};
 public:
+	int3 position = int3(0);
 	ChunkState state = ChunkState::Allocated;
 	bool isEmpty = false;
 	
@@ -71,7 +71,6 @@ public:
 		this->entity = entity;
 	}
 	
-	const int3& getPosition() const noexcept{ return position; }
 	uint32 getStructureID() const noexcept { return structureID; }
 	ID<Entity> getEntity() const noexcept { return entity; }
 private:

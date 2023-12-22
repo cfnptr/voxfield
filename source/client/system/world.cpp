@@ -86,7 +86,7 @@ void WorldSystem::update()
 	generatorSystem->flush([this](const Chunk* genChunk)
 	{
 		Chunk* worldChunk;
-		if (!structure.tryGetChunk(genChunk->getPosition(), worldChunk) ||
+		if (!structure.tryGetChunk(genChunk->position, worldChunk) ||
 			worldChunk->state != ChunkState::Generating) return;
 		if (genChunk->isEmpty) worldChunk->state = ChunkState::Meshed;
 		else
@@ -134,7 +134,7 @@ void WorldSystem::update()
 				if (chunk->state == ChunkState::Allocated)
 				{
 					generatorSystem->generateChunk(chunkPosition,
-						WORLD_STRUCTURE_ID, GenType::DebugSoloVoxel);
+						WORLD_STRUCTURE_ID, GenType::DebugSphere);
 					chunk->state = ChunkState::Generating;
 				}
 				else if (chunk->state == ChunkState::Generated)

@@ -56,6 +56,10 @@ protected:
 	uint32 swapchainIndex = 0;
 	GraphicsPipeline::Index indexBufferType = {};
 
+	#if GARDEN_DEBUG
+	string gpuLabel = "Voxel Geometry";
+	#endif
+
 	void initialize() override;
 	
 	bool isDrawReady() override;

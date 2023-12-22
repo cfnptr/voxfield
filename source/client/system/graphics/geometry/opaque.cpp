@@ -25,6 +25,10 @@ using namespace voxfield::client;
 void OpaqVoxRenderSystem::initialize()
 {
 	VoxGeoRenderSystem::initialize();
+
+	#if GARDEN_DEBUG
+	gpuLabel = "Opaque Voxel";
+	#endif
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -120,6 +120,7 @@ public:
 			freeChunks->pop();
 			chunk->fill(voxel);
 			chunk->state = ChunkState::Allocated;
+			chunk->position = position;
 			transformComponent = manager->get<TransformComponent>(chunk->getEntity());
 		}
 		else
@@ -206,8 +207,8 @@ public:
 			auto opaqVoxComponent = manager->get<
 				OpaqVoxRenderComponent>(i->second->getEntity());
 			graphicsSystem->destroy(opaqVoxComponent->vertexBuffer);
-			opaqVoxComponent->isEnabled = false;
 			opaqVoxComponent->vertexBuffer = {};
+			opaqVoxComponent->isEnabled = false;
 			if (freeChunks) freeChunks->push(i->second);
 			i = chunks.erase(i);
 		}

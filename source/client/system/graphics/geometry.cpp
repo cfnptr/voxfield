@@ -85,6 +85,10 @@ bool VoxGeoRenderSystem::isDrawReady()
 void VoxGeoRenderSystem::prepareDraw(const float4x4& viewProj,
 	ID<Framebuffer> framebuffer, uint32 drawCount)
 {
+	#if GARDEN_DEBUG
+	BEGIN_GPU_DEBUG_LABEL(gpuLabel, Color::transparent);
+	#endif
+
 	auto graphicsSystem = getGraphicsSystem();
 	if (graphicsSystem->get(instanceBuffers[0][0])->getBinarySize() <
 		drawCount * sizeof(InstanceData))
@@ -142,6 +146,7 @@ void VoxGeoRenderSystem::finalizeDraw(const float4x4& viewProj,
 {
 	auto instanceBufferView = getGraphicsSystem()->get(instanceBuffers[swapchainIndex][0]);
 	instanceBufferView->flush(drawCount * sizeof(InstanceData));
+	END_GPU_DEBUG_LABEL();
 }
 
 void VoxGeoRenderSystem::recreateSwapchain(const SwapchainChanges& changes)

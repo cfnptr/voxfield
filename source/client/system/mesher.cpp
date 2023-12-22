@@ -724,7 +724,7 @@ void MesherSystem::generate(const ThreadPool::Task& task)
 			BufferExt::create(Buffer::Bind::TransferSrc, Buffer::Access::SequentialWrite,
 				Buffer::Usage::Auto, Buffer::Strategy::Speed, bufferByteSize, 0),
 			cluster->c->getStructureID(),
-			cluster->c->getPosition()
+			cluster->c->position
 		};
 
 		auto stagingMap = mesh.stagingBuffer.getMap();
@@ -741,7 +741,7 @@ void MesherSystem::generate(const ThreadPool::Task& task)
 			BufferExt::create((Buffer::Bind)0, (Buffer::Access)0,
 				(Buffer::Usage)0, (Buffer::Strategy)0, 0),
 			cluster->c->getStructureID(),
-			cluster->c->getPosition()
+			cluster->c->position
 		};
 
 		system->meshes.push_back(std::move(mesh));

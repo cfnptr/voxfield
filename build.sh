@@ -28,7 +28,8 @@ fi
 echo ""
 echo "Building project..."
 
-cmake --build build/ --config Release -j $(nproc)
+threadCount=$(nproc)
+cmake --build build/ --config Release -j $threadCount
 status=$?
 
 if [ $status -ne 0 ]; then

@@ -46,6 +46,7 @@ set(VOXFIELD_LINK_LIBS garden)
 
 # TODO: remove this setter. This is temporary.
 set(GARDEN_RELEASE_EDITOR ON CACHE BOOL "" FORCE)
+set(GARDEN_RELEASE_DEBUGGING ON CACHE BOOL "" FORCE)
 
 set(GARDEN_APP_NAME "Voxfield")
 set(GARDEN_APP_VERSION_MAJOR ${Voxfield_VERSION_MAJOR})
@@ -57,14 +58,9 @@ add_subdirectory(libraries/garden)
 
 file(GLOB_RECURSE VOXFIELD_CORE_SOURCES source/core/*.cpp)
 file(GLOB_RECURSE VOXFIELD_CLIENT_SOURCES source/client/*.cpp)
-if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-		add_executable(voxfield-client WIN32 source/client.cpp
-			${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
-	else()
-		add_executable(voxfield-client source/client.cpp
-			${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
-	endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	add_executable(voxfield-client WIN32 source/client.cpp
+		${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
 else()
 	add_executable(voxfield-client source/client.cpp
 		${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})

@@ -20,10 +20,12 @@
 #include "garden/system/fpv.hpp"
 #include "garden/system/settings.hpp"
 #include "garden/system/resource.hpp"
+#include "garden/system/graphics/ssao.hpp"
 #include "garden/system/graphics/fxaa.hpp"
 #include "garden/system/graphics/editor.hpp"
 #include "garden/system/graphics/skybox.hpp"
 #include "garden/system/graphics/lighting.hpp"
+#include "garden/system/graphics/atmosphere.hpp"
 #include "garden/system/graphics/tone-mapping.hpp"
 #include "garden/system/graphics/auto-exposure.hpp"
 #include "voxfield/client/system/world.hpp"
@@ -63,7 +65,9 @@ static void run()
 
 	manager->createSubsystem<GraphicsSystem, MeshRenderSystem>(true);
 	manager->createSubsystem<GraphicsSystem, DeferredRenderSystem>(true);
+	manager->createSubsystem<GraphicsSystem, SsaoRenderSystem>();
 	manager->createSubsystem<GraphicsSystem, SkyboxRenderSystem>();
+	manager->createSubsystem<GraphicsSystem, AtmosphereRenderSystem>();
 	manager->createSubsystem<GraphicsSystem, OpaqVoxRenderSystem>();
 	manager->createSubsystem<GraphicsSystem, LightingRenderSystem>();
 	manager->createSubsystem<GraphicsSystem, BloomRenderSystem>();
@@ -84,6 +88,7 @@ static void run()
 
 	manager->registerSubsystem<MeshRenderSystem>(manager->get<OpaqVoxRenderSystem>());
 	// manager.registerSubsystem<MeshRenderSystem>(manager.get<TransVoxRenderSystem>());
+	manager->registerSubsystem<LightingRenderSystem>(manager->get<SsaoRenderSystem>());
 
 	manager->initialize();
 	manager->start();
