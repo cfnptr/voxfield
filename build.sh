@@ -14,6 +14,8 @@ echo "Configuring project..."
 
 if [[ "$OSTYPE" == "msys" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Release -T ClangCL -A x64 -S . -B build/
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    cmake -DCMAKE_BUILD_TYPE=Release -S . -B build/
 else
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/usr/bin/clang-cpp -S . -B build/
 fi
