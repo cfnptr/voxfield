@@ -15,6 +15,8 @@ However, you can also compile it under any other Linux distribution or operating
 
 ## Supported hardware
 
+* At least GPU with Vulkan API 1.1 support.
+
 ### Graphics processing unit (GPU)
 
 * Nvidia [Maxwell](https://developer.nvidia.com/maxwell-compute-architecture) microarchitecture and newer

@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------------------------------
 # Voxfield - An open source voxel based multiplayer sandbox game.
-# Copyright (C) 2022-2023  Nikita Fediuchin
+# Copyright (C) 2022-2024  Nikita Fediuchin
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ add_subdirectory(libraries/garden)
 
 file(GLOB_RECURSE VOXFIELD_CORE_SOURCES source/core/*.cpp)
 file(GLOB_RECURSE VOXFIELD_CLIENT_SOURCES source/client/*.cpp)
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_BUILD_TYPE STREQUAL "Release")
 	add_executable(voxfield-client WIN32 source/client.cpp
 		${VOXFIELD_CLIENT_SOURCES} ${VOXFIELD_CORE_SOURCES})
 else()

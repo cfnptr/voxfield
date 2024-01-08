@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------------------------------
 // Voxfield - An open source voxel based multiplayer sandbox game.
-// Copyright (C) 2022-2023  Nikita Fediuchin
+// Copyright (C) 2022-2024  Nikita Fediuchin
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,14 +20,14 @@
 #include "garden/system/fpv.hpp"
 #include "garden/system/settings.hpp"
 #include "garden/system/resource.hpp"
-#include "garden/system/graphics/ssao.hpp"
-#include "garden/system/graphics/fxaa.hpp"
-#include "garden/system/graphics/editor.hpp"
-#include "garden/system/graphics/skybox.hpp"
-#include "garden/system/graphics/lighting.hpp"
-#include "garden/system/graphics/atmosphere.hpp"
-#include "garden/system/graphics/tone-mapping.hpp"
-#include "garden/system/graphics/auto-exposure.hpp"
+#include "garden/system/render/ssao.hpp"
+#include "garden/system/render/fxaa.hpp"
+#include "garden/system/render/editor.hpp"
+#include "garden/system/render/skybox.hpp"
+#include "garden/system/render/lighting.hpp"
+#include "garden/system/render/atmosphere.hpp"
+#include "garden/system/render/tone-mapping.hpp"
+#include "garden/system/render/auto-exposure.hpp"
 #include "voxfield/client/system/world.hpp"
 
 extern "C"

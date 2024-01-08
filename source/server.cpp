@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------------------------------
 // Voxfield - An open source voxel based multiplayer sandbox game.
-// Copyright (C) 2022-2023  Nikita Fediuchin
+// Copyright (C) 2022-2024  Nikita Fediuchin
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

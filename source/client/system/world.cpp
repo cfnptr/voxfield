@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------------------------------
 // Voxfield - An open source voxel based multiplayer sandbox game.
-// Copyright (C) 2022-2023  Nikita Fediuchin
+// Copyright (C) 2022-2024  Nikita Fediuchin
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 using namespace voxfield;
 using namespace voxfield::client;
 
-#include "garden/system/graphics/skybox.hpp" // TODO: remove
-#include "garden/system/graphics/lighting.hpp" // TODO: remove
+#include "garden/system/render/skybox.hpp" // TODO: remove
+#include "garden/system/render/lighting.hpp" // TODO: remove
 
 void WorldSystem::initialize()
 {
@@ -69,8 +69,6 @@ void WorldSystem::update()
 		auto lightingComponent = manager->add<LightingRenderComponent>(graphicsSystem->camera);
 		lightingSystem->loadCubemap("cubemaps/pure-sky",
 			lightingComponent->cubemap, lightingComponent->sh, lightingComponent->specular);
-		lightingComponent->descriptorSet = lightingSystem->createDescriptorSet(
-			lightingComponent->sh, lightingComponent->specular);
 
 		auto skyboxComponent = manager->add<SkyboxRenderComponent>(graphicsSystem->camera);
 		skyboxComponent->cubemap = lightingComponent->cubemap;
