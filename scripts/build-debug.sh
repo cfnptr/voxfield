@@ -9,15 +9,9 @@ if [ $status -ne 0 ]; then
     exit $status
 fi
 
-echo ""
 echo "Configuring project..."
 
-if [[ "$OSTYPE" == "msys" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Release -T ClangCL -A x64 -S . -B build/
-else
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/usr/bin/clang-cpp -S . -B build/
-fi
-
+cmake -DCMAKE_BUILD_TYPE=Debug -S ../ -B ../build-debug/
 status=$?
 
 if [ $status -ne 0 ]; then
@@ -28,13 +22,25 @@ fi
 echo ""
 echo "Building project..."
 
-threadCount=$(nproc)
-cmake --build build/ --config Release -j $threadCount
+cmake --build ../build-debug/ --config Debug --parallel
 status=$?
 
 if [ $status -ne 0 ]; then
     echo "Failed to build CMake project."
     exit $status
+fi
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo ""
+    echo "Fixing up macOS bundle..."
+
+    cmake --install ../build-debug/ --component FixupBundle
+    status=$?
+
+    if [ $status -ne 0 ]; then
+        echo "Failed to fix up macOS bundle."
+        exit $status
+    fi
 fi
 
 exit 0

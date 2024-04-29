@@ -41,7 +41,6 @@ ID<Component> OpaqVoxRenderSystem::createComponent(ID<Entity> entity)
 	GARDEN_ASSERT(getManager()->has<TransformComponent>(entity));
 	auto instance = components.create();
 	auto component = components.get(instance);
-	component->entity = entity;
 	component->transform = getManager()->getID<TransformComponent>(entity);
 	return ID<Component>(instance);
 }
@@ -92,9 +91,7 @@ type_index OpaqVoxShadRenderSystem::getComponentType() const
 ID<Component> OpaqVoxShadRenderSystem::createComponent(ID<Entity> entity)
 {
 	GARDEN_ASSERT(getManager()->has<TransformComponent>(entity));
-	auto instance = components.create();
-	components.get(instance)->entity = entity;
-	return ID<Component>(instance);
+	return ID<Component>(components.create());
 }
 void OpaqVoxShadRenderSystem::destroyComponent(ID<Component> instance)
 {

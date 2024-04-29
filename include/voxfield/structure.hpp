@@ -134,10 +134,10 @@ public:
 		}
 
 		auto hash = posToChunkHash(position);
-		auto result = chunks.emplace(hash, chunk);
+		auto result = chunks.emplace(hash, chunk).second;
 
 		#if GARDEN_DEBUG || GARDEN_EDITOR
-		if (!result.second)
+		if (!result)
 		{
 			manager->destroy(chunk->getEntity());
 			delete chunk;

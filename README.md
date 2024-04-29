@@ -8,21 +8,21 @@ It's a space where imagination and exploration intersect, allowing users to crea
 
 * Windows (10/11)
 * Ubuntu (22.04 LTS)
-* macOS (Monterey 12)
+* macOS (Ventura 13)
 
 This list includes only those systems on which functionality testing is conducted.
 However, you can also compile it under any other Linux distribution or operating system.
 
 ## Supported hardware
 
-* At least GPU with Vulkan API 1.1 support.
-
 ### Graphics processing unit (GPU)
 
-* Nvidia [Maxwell](https://developer.nvidia.com/maxwell-compute-architecture) microarchitecture and newer
+* Nvidia [Kepler](https://en.wikipedia.org/wiki/Kepler_(microarchitecture)) microarchitecture and newer
 * AMD [GCN](https://en.wikipedia.org/wiki/Graphics_Core_Next) microarchitecture and newer
 * Intel [Gen9](https://en.wikichip.org/wiki/intel/microarchitectures/gen9) microarchitecture and newer
 * Apple [M1](https://en.wikipedia.org/wiki/Apple_M1) processor and newer (partial support)
+
+At least GPU with Vulkan API 1.1 support.
 
 ### Central processing unit (CPU)
 
@@ -40,7 +40,7 @@ If you want, you can freely disable it and compile for any other architecture, i
 ## Build Voxfield
 
 1. Follow Garden building [instructions](https://github.com/cfnptr/garden/blob/main/BUILDING.md)
-1. Run ```git clone --recursive https://github.com/cfnptr/voxfield``` using **Terminal** (This may take some time)
+2. Run ```git clone --progress --recursive https://github.com/cfnptr/voxfield``` using **Terminal**
 3. Open voxfield directory using **IDE** or use [build.sh](build.sh) script
 
 ### CMake options
